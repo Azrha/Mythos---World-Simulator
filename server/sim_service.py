@@ -139,13 +139,30 @@ class SimulationService:
         key = (color or "").strip().lower()
         mapping = {
             "human": "humanoid",
+            "settler": "humanoid",
+            "fae": "humanoid",
+            "tribe": "humanoid",
+            "pilot": "humanoid",
             "animal": "animal",
+            "fauna": "animal",
+            "beast": "animal",
+            "raptor": "animal",
             "alien": "alien",
+            "outsider": "alien",
+            "voidborn": "alien",
             "building": "building",
+            "habitat": "building",
+            "obelisk": "building",
+            "station": "building",
             "tree": "tree",
+            "grove": "tree",
+            "cycad": "tree",
             "dino": "dino",
+            "saurian": "dino",
+            "wyrm": "dino",
             "metal": "machine",
             "gold": "machine",
+            "synth": "machine",
         }
         return mapping.get(key, "creature")
 
