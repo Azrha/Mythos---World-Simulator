@@ -38,7 +38,7 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 - [ ] Behavior libraries (role-based behaviors)
 
 ## Phase 5.1 — World Identity & Differentiation (New)
-- [ ] Distinct visual themes per worldpack (sky/terrain palettes, water tint, fog, lighting)
+- [x] Distinct visual themes per worldpack (sky/terrain palettes, water tint, fog, lighting)
 - [x] Unique species rosters per worldpack (avoid reusing human/alien/building defaults)
 - [x] World-specific physics profiles (gravity/drag/collision ranges tuned per setting)
 - [x] Terrain + climate signatures per world (seed/scale, rainfall, fertility bias)
