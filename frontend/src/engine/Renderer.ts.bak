@@ -981,57 +981,6 @@ export class Renderer {
     const sizeFactor = clamp(entity.size || 4, 2.5, 8) / 4;
     const assetScale = spec.scale * sizeFactor;
     clone.scale.multiplyScalar(assetScale);
-    // [Mythos] size normalization: measure -> normalize outliers -> re-measure/verify
-    {
-      const __box = new THREE.Box3().setFromObject(clone);
-      const __size = new THREE.Vector3();
-      __box.getSize(__size);
-
-      const __hasHeight = spec.targetHeight != null && spec.heightRange != null;
-      const __hasExtent = spec.targetExtent != null && spec.extentRange != null;
-
-      let __measured: number | null = null;
-      if (__hasHeight) __measured = __size.y;
-      else if (__hasExtent) __measured = Math.max(__size.x, __size.y, __size.z);
-
-      const __isValid = __measured != null && Number.isFinite(__measured) && __measured > 1e-6;
-
-      if (__isValid) {
-        if (__hasHeight) {
-          const [minH, maxH] = spec.heightRange!;
-          if (__measured! < minH || __measured! > maxH) {
-            const adj = spec.targetHeight! / __measured!;
-            clone.scale.multiplyScalar(adj);
-          }
-        } else if (__hasExtent) {
-          const [minE, maxE] = spec.extentRange!;
-          if (__measured! < minE || __measured! > maxE) {
-            const adj = spec.targetExtent! / __measured!;
-            clone.scale.multiplyScalar(adj);
-          }
-        }
-
-        // verify final size
-        const __box2 = new THREE.Box3().setFromObject(clone);
-        __box2.getSize(__size);
-        const __final = __hasHeight ? __size.y : Math.max(__size.x, __size.y, __size.z);
-
-        if (__hasHeight) {
-          const [minH, maxH] = spec.heightRange!;
-          if (__final < minH || __final > maxH) {
-            console.warn(`[Mythos] Asset ${assetKey} final height ${__final.toFixed(3)}m out of range [${minH}, ${maxH}]`);
-          }
-        } else if (__hasExtent) {
-          const [minE, maxE] = spec.extentRange!;
-          if (__final < minE || __final > maxE) {
-            console.warn(`[Mythos] Asset ${assetKey} final extent ${__final.toFixed(3)}m out of range [${minE}, ${maxE}]`);
-          }
-        }
-      } else {
-        console.warn(`[Mythos] Asset ${assetKey} could not be measured for normalization (invalid bounds).`);
-      }
-    }
-
     clone.rotation.y = spec.rotateY ?? 0;
     clone.position.y = spec.yOffset ?? 0;
 
