@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import EngineView from "./components/EngineView";
+import { AmbientAudio } from "./engine/ambientAudio";
 
 const DEFAULT_API_BASE = "http://127.0.0.1:8000";
 const DEFAULT_PRESET_ID = "living_world.json";
@@ -104,6 +105,9 @@ export default function App() {
   const [backendReady, setBackendReady] = useState(false);
   const [mode, setMode] = useState<"2d" | "3d">("3d");
   const [assetStyle, setAssetStyle] = useState<"assets" | "procedural">("assets");
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [audioVolume, setAudioVolume] = useState(0.18);
+  const audioRef = useRef<AmbientAudio | null>(null);
   const [loadingPresets, setLoadingPresets] = useState(true);
   const [loadingPreset, setLoadingPreset] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -188,6 +192,19 @@ export default function App() {
       }
     }
   }, [mode, gpuAvailable]);
+
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new AmbientAudio();
+    }
+    const themeId = pickTheme(activePreset);
+    const audio = audioRef.current;
+    if (!audioEnabled) {
+      audio.disable();
+      return;
+    }
+    void audio.enable(themeId, audioVolume);
+  }, [audioEnabled, audioVolume, activePreset]);
 
   const loadPreset = async (id: string) => {
     if (!id) return null;
@@ -495,6 +512,24 @@ export default function App() {
               <option value="assets">Real 3D assets</option>
               <option value="procedural">Procedural</option>
             </select>
+            <label>Mood audio</label>
+            <div className="toggle-row">
+              <button
+                className={audioEnabled ? "active" : "secondary"}
+                onClick={() => setAudioEnabled((prev) => !prev)}
+              >
+                {audioEnabled ? "Ambient on" : "Ambient off"}
+              </button>
+              <input
+                className="range"
+                type="range"
+                min="0"
+                max="0.5"
+                step="0.01"
+                value={audioVolume}
+                onChange={(e) => setAudioVolume(Number(e.target.value))}
+              />
+            </div>
             <div className="hint">Drag to orbit. Scroll to zoom. Click to inspect.</div>
             <button className="secondary" onClick={openPopup}>
               Popout 3D View

@@ -231,6 +231,11 @@ button.active {
   margin-top: 8px;
 }
 
+.range {
+  flex: 1;
+  min-width: 140px;
+}
+
 .main-panel {
   display: flex;
   flex-direction: column;
