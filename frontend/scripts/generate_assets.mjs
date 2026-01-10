@@ -61,6 +61,15 @@ const makeTree = () => {
   const crownC = new THREE.Mesh(new THREE.SphereGeometry(0.65, 18, 14), canopy);
   crownC.position.set(-0.6, 2.0, 0.4);
   group.add(crownC);
+  const branchMat = material("#6a4b2f", 0.8, 0.0);
+  const branchA = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.18, 1.1, 8), branchMat);
+  branchA.position.set(0.5, 1.6, 0.2);
+  branchA.rotation.z = Math.PI / 4;
+  group.add(branchA);
+  const branchB = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.14, 0.9, 8), branchMat);
+  branchB.position.set(-0.5, 1.5, -0.2);
+  branchB.rotation.z = -Math.PI / 4;
+  group.add(branchB);
   return group;
 };
 
@@ -78,6 +87,9 @@ const makeCycad = () => {
     leaf.rotation.y = angle;
     group.add(leaf);
   }
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 10), material("#7b5a3b", 0.8, 0.0));
+  bulb.position.set(0, 0.2, 0);
+  group.add(bulb);
   return group;
 };
 
@@ -97,6 +109,9 @@ const makeHabitat = () => {
   const windowB = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.05), windowMat);
   windowB.position.set(-0.4, 0.9, -0.82);
   group.add(windowB);
+  const porch = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.2, 0.8), material("#7e6f63", 0.8, 0.1));
+  porch.position.set(0, 0.1, 1.0);
+  group.add(porch);
   return group;
 };
 
@@ -108,6 +123,12 @@ const makeObelisk = () => {
   const cap = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.3, 0.8), material("#d2c0ff", 0.2, 0.3));
   cap.position.y = 2.65;
   group.add(cap);
+  const gem = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.25, 1),
+    material("#caa6ff", 0.1, 0.6)
+  );
+  gem.position.y = 2.2;
+  group.add(gem);
   return group;
 };
 
@@ -123,6 +144,16 @@ const makeAlien = () => {
   crest.position.y = 1.5;
   crest.rotation.x = Math.PI / 2;
   group.add(crest);
+  const armGeom = new THREE.CylinderGeometry(0.08, 0.12, 0.7, 8);
+  const armMat = material("#79c9ff", 0.5, 0.1);
+  const armL = new THREE.Mesh(armGeom, armMat);
+  armL.position.set(-0.45, 1.2, 0.1);
+  armL.rotation.z = Math.PI / 3;
+  group.add(armL);
+  const armR = new THREE.Mesh(armGeom, armMat);
+  armR.position.set(0.45, 1.2, 0.1);
+  armR.rotation.z = -Math.PI / 3;
+  group.add(armR);
   return group;
 };
 
@@ -143,6 +174,12 @@ const makeDino = () => {
   tail.position.set(0, 0.6, -1.6);
   tail.rotation.x = -Math.PI / 2;
   group.add(tail);
+  const plateMat = material("#5f8f5a", 0.7, 0.05);
+  for (let i = 0; i < 5; i += 1) {
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.05), plateMat);
+    plate.position.set(0, 1.0 + i * 0.15, -0.6 + i * 0.35);
+    group.add(plate);
+  }
   const legGeom = new THREE.CylinderGeometry(0.12, 0.2, 0.9, 8);
   const legMat = material("#5b7f52", 0.7, 0.05);
   [

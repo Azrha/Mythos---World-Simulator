@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SkeletonUtils } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { ASSET_KIND_FALLBACK, ASSET_MANIFEST, AssetSpec, AssetStyle } from "./assets";
+import { ASSET_KIND_FALLBACK, ASSET_SETS, AssetSpec, AssetStyle } from "./assets";
 
 export type Entity = {
   id: number;
@@ -46,6 +46,7 @@ type Rig = {
   pickables: THREE.Mesh[];
   baseScale: number;
   phase: number;
+  mixer?: THREE.AnimationMixer;
 };
 
 type Theme = {
@@ -308,9 +309,11 @@ export class Renderer {
   private assetsReady = false;
   private pendingEntities: Entity[] | null = null;
   private assetLoader = new GLTFLoader();
-  private assetSpecs = ASSET_MANIFEST;
+  private assetSpecs = ASSET_SETS.living;
   private assetBase = new Map<string, THREE.Object3D>();
+  private assetAnimations = new Map<string, THREE.AnimationClip[]>();
   private assetPromises = new Map<string, Promise<THREE.Object3D>>();
+  private themeTexture?: THREE.CanvasTexture;
 
   constructor(canvas: HTMLCanvasElement) {
     const renderer = new THREE.WebGLRenderer({
@@ -606,6 +609,11 @@ export class Renderer {
     if (nextTheme.id === this.themeId) return;
     this.themeId = nextTheme.id;
     this.theme = nextTheme;
+    this.assetSpecs = ASSET_SETS[this.themeId] || ASSET_SETS.living;
+    this.themeTexture = undefined;
+    this.assetBase.clear();
+    this.assetPromises.clear();
+    this.assetAnimations.clear();
     if (this.scene.fog) {
       this.scene.fog.color = new THREE.Color(this.theme.fog);
       (this.scene.fog as THREE.FogExp2).density = this.theme.fogDensity;
@@ -626,6 +634,10 @@ export class Renderer {
     this.buildSky();
     this.updateStars();
     this.needsTerrainRebuild = true;
+    if (this.assetStyle === "assets") {
+      this.resetRigs();
+      void this.preloadAssets();
+    }
   }
 
   setFields(fields: FieldPayload) {
@@ -686,6 +698,69 @@ export class Renderer {
     }
   }
 
+  private resetRigs() {
+    for (const rig of this.rigs.values()) {
+      rig.pickables.forEach((mesh) => {
+        const index = this.pickables.indexOf(mesh);
+        if (index >= 0) this.pickables.splice(index, 1);
+      });
+      this.scene.remove(rig.group);
+    }
+    this.rigs.clear();
+  }
+
+  private getThemeTexture() {
+    if (this.themeTexture) return this.themeTexture;
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    const grad = ctx.createLinearGradient(0, 0, 64, 64);
+    grad.addColorStop(0, this.theme.terrainLow);
+    grad.addColorStop(0.5, this.theme.terrainMid);
+    grad.addColorStop(1, this.theme.terrainHigh);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
+    ctx.fillStyle = "rgba(0,0,0,0.1)";
+    for (let i = 0; i < 6; i += 1) {
+      ctx.beginPath();
+      ctx.arc(8 + i * 9, 8 + (i % 3) * 14, 4 + (i % 3), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(1.5, 1.5);
+    this.themeTexture = texture;
+    return texture;
+  }
+
+  private applyMaterialOverrides(mesh: THREE.Mesh, spec: AssetSpec) {
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    const texture = this.getThemeTexture();
+    materials.forEach((mat) => {
+      if (!mat || !(mat as THREE.MeshStandardMaterial).isMeshStandardMaterial) return;
+      const standard = mat as THREE.MeshStandardMaterial;
+      if (!standard.map && texture) {
+        standard.map = texture;
+        standard.needsUpdate = true;
+      }
+      if (spec.tint) {
+        standard.color.multiply(new THREE.Color(spec.tint));
+      }
+      if (spec.emissive) {
+        standard.emissive = new THREE.Color(spec.emissive);
+      }
+      if (typeof spec.roughness === "number") {
+        standard.roughness = spec.roughness;
+      }
+      if (typeof spec.metalness === "number") {
+        standard.metalness = spec.metalness;
+      }
+    });
+  }
+
   private resolveAssetKey(entity: Entity) {
     const colorKey = entity.color.trim().toLowerCase();
     if (this.assetSpecs[colorKey]) return colorKey;
@@ -715,6 +790,9 @@ export class Renderer {
             }
           });
           this.assetBase.set(key, scene);
+          if (gltf.animations?.length) {
+            this.assetAnimations.set(key, gltf.animations);
+          }
           resolve(scene);
         },
         undefined,
@@ -771,7 +849,8 @@ export class Renderer {
 
     const clone = SkeletonUtils.clone(base);
     const sizeFactor = clamp(entity.size || 4, 2.5, 8) / 4;
-    clone.scale.multiplyScalar(spec.scale * sizeFactor);
+    const assetScale = spec.scale * sizeFactor;
+    clone.scale.multiplyScalar(assetScale);
     clone.rotation.y = spec.rotateY ?? 0;
     clone.position.y = spec.yOffset ?? 0;
 
@@ -779,21 +858,31 @@ export class Renderer {
     const limbs: THREE.Mesh[] = [];
     const pickables: THREE.Mesh[] = [];
     let body: THREE.Mesh | null = null;
+    let mixer: THREE.AnimationMixer | undefined;
 
     clone.traverse((node) => {
       if ((node as THREE.Mesh).isMesh) {
         const mesh = node as THREE.Mesh;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+        this.applyMaterialOverrides(mesh, spec);
         if (!body) body = mesh;
         this.registerPickable(mesh, entity.id, pickables);
       }
     });
 
+    const clips = this.assetAnimations.get(assetKey);
+    if (clips && clips.length) {
+      mixer = new THREE.AnimationMixer(clone);
+      const clip = clips.find((item) => item.name.toLowerCase().includes("idle")) || clips[0];
+      const action = mixer.clipAction(clip);
+      action.play();
+    }
+
     group.add(clone);
 
     const phase = (entity.id * 0.37) % Math.PI;
-    const baseScale = spec.scale;
+    const baseScale = assetScale;
 
     return {
       id: entity.id,
@@ -808,6 +897,7 @@ export class Renderer {
       pickables,
       baseScale,
       phase,
+      mixer,
     };
   }
 
@@ -1094,6 +1184,7 @@ export class Renderer {
       this.resize(this.renderer.domElement.clientWidth || 1, this.renderer.domElement.clientHeight || 1);
     }
 
+    const delta = this.clock.getDelta();
     const elapsed = this.clock.getElapsedTime();
     const centerX = this.w * 0.5;
     const centerZ = this.h * 0.5;
@@ -1115,6 +1206,9 @@ export class Renderer {
 
       const pulse = Math.sin(elapsed * 2 + rig.phase) * 0.06;
       rig.group.position.y += pulse;
+      if (rig.mixer) {
+        rig.mixer.update(delta);
+      }
 
       const gait = Math.sin(elapsed * 4 + rig.phase) * 0.6 * (0.5 + clamp(speed, 0, 2));
       rig.limbs.forEach((limb, idx) => {

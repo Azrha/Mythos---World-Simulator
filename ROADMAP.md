@@ -39,19 +39,19 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 
 ## Phase 5.1 — World Identity & Differentiation (New)
 - [ ] Distinct visual themes per worldpack (sky/terrain palettes, water tint, fog, lighting)
-- [ ] Unique species rosters per worldpack (avoid reusing human/alien/building defaults)
-- [ ] World-specific physics profiles (gravity/drag/collision ranges tuned per setting)
-- [ ] Terrain + climate signatures per world (seed/scale, rainfall, fertility bias)
+- [x] Unique species rosters per worldpack (avoid reusing human/alien/building defaults)
+- [x] World-specific physics profiles (gravity/drag/collision ranges tuned per setting)
+- [x] Terrain + climate signatures per world (seed/scale, rainfall, fertility bias)
 - [ ] Per-world sound/mood profiles (ambient emitters + seasonal intensity curves)
-- [ ] Validation rule: each worldpack must change at least 3 axes (visual, species, physics, terrain)
+- [x] Validation rule: each worldpack must change at least 3 axes (visual, species, physics, terrain)
 
 ## Phase 5.2 — 3D Asset Integration Plan (New)
 - [x] Establish asset folder + attribution
 - [x] Import CC0/Apache-2.0 models and generate custom GLB assets
 - [x] Asset style switch (real assets vs procedural)
-- [ ] Model fidelity pass (higher detail trees, buildings, dinos)
-- [ ] Animated rigs per species (walk cycles and idle loops)
-- [ ] World-specific asset sets (fantasy vs dino vs space visuals)
+- [x] Model fidelity pass (higher detail trees, buildings, dinos)
+- [x] Animated rigs per species (walk cycles and idle loops)
+- [x] World-specific asset sets (fantasy vs dino vs space visuals)
 
 ## Phase 6 — Observability & QA
 - [ ] Diagnostics overlays (energy, density, motion)
