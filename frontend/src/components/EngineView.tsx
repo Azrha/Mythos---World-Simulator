@@ -30,6 +30,7 @@ type Props = {
   fields?: FieldPayload | null;
   theme?: string;
   assetStyle?: AssetStyle;
+  showDiagnostics?: boolean;
 };
 
 const DEFAULT_API_BASE = "http://127.0.0.1:8000";
@@ -75,16 +76,27 @@ export default function EngineView({
   fields,
   theme,
   assetStyle = "assets",
+  showDiagnostics = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
   const worldRef = useRef({ w: 1, h: 1 });
   const pendingFrameRef = useRef<FramePayload | null>(null);
+  const lastFrameRef = useRef<FramePayload | null>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pointerRef = useRef({ down: false, x: 0, y: 0, moved: false });
   const [hasFrame, setHasFrame] = React.useState(false);
   const [rendererReady, setRendererReady] = React.useState(false);
   const [rendererError, setRendererError] = React.useState<string | null>(null);
   const [assetsReady, setAssetsReady] = React.useState(assetStyle !== "assets");
+  const [diagnostics, setDiagnostics] = React.useState({
+    fps: 0,
+    avgSpeed: 0,
+    avgEnergy: 0,
+    avgWealth: 0,
+    count: 0,
+  });
+  const lastFrameTime = useRef<number | null>(null);
 
   const normalizedWsUrl = useMemo(() => {
     return normalizeWsUrl(apiBase);
@@ -172,6 +184,28 @@ export default function EngineView({
   }, [assetStyle]);
 
   useEffect(() => {
+    if (!showDiagnostics) return;
+    const canvas = overlayCanvasRef.current;
+    const frame = lastFrameRef.current;
+    if (!canvas || !frame) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(12, 14, 20, 0.6)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const scaleX = canvas.width / frame.w;
+    const scaleY = canvas.height / frame.h;
+    ctx.fillStyle = "rgba(90, 200, 255, 0.7)";
+    for (const entity of frame.entities) {
+      const x = entity.x * scaleX;
+      const y = entity.y * scaleY;
+      ctx.beginPath();
+      ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }, [diagnostics, showDiagnostics]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     const renderer = rendererRef.current;
     if (!canvas || !renderer) return;
@@ -220,6 +254,25 @@ export default function EngineView({
       }
       worldRef.current = { w: payload.w, h: payload.h };
       renderer.setEntities(payload.entities || []);
+      lastFrameRef.current = payload;
+      const now = performance.now();
+      const prev = lastFrameTime.current;
+      const fps = prev ? 1000 / Math.max(1, now - prev) : 0;
+      lastFrameTime.current = now;
+      const count = payload.entities.length || 1;
+      const speedSum = payload.entities.reduce(
+        (sum, entity) => sum + Math.hypot(entity.vx || 0, entity.vy || 0),
+        0
+      );
+      const energySum = payload.entities.reduce((sum, entity) => sum + (entity.energy ?? 0.6), 0);
+      const wealthSum = payload.entities.reduce((sum, entity) => sum + (entity.wealth ?? 0), 0);
+      setDiagnostics({
+        fps: Number.isFinite(fps) ? fps : 0,
+        avgSpeed: speedSum / count,
+        avgEnergy: energySum / count,
+        avgWealth: wealthSum / count,
+        count: payload.entities.length,
+      });
       setHasFrame(true);
       onFrame?.(payload);
     };
@@ -337,6 +390,19 @@ export default function EngineView({
             <div className="loading-bar__fill" />
           </div>
           <div className="small">Waiting for frames...</div>
+        </div>
+      )}
+      {showDiagnostics && (
+        <div className="overlay diagnostics">
+          <div className="diagnostics__panel">
+            <div className="diagnostics__title">Diagnostics</div>
+            <div>Entities: {diagnostics.count}</div>
+            <div>FPS: {diagnostics.fps.toFixed(1)}</div>
+            <div>Avg speed: {diagnostics.avgSpeed.toFixed(2)}</div>
+            <div>Avg energy: {diagnostics.avgEnergy.toFixed(2)}</div>
+            <div>Avg wealth: {diagnostics.avgWealth.toFixed(2)}</div>
+          </div>
+          <canvas ref={overlayCanvasRef} width={160} height={100} />
         </div>
       )}
       <canvas ref={canvasRef} />

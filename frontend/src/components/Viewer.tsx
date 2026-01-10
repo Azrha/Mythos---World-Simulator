@@ -17,5 +17,5 @@ export default function Viewer() {
   } catch {
     base = "http://127.0.0.1:8000";
   }
-  return <EngineView mode="3d" apiBase={base} assetStyle="assets" />;
+  return <EngineView mode="3d" apiBase={base} assetStyle="assets" showDiagnostics={false} />;
 }

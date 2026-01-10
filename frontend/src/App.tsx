@@ -105,6 +105,7 @@ export default function App() {
   const [backendReady, setBackendReady] = useState(false);
   const [mode, setMode] = useState<"2d" | "3d">("3d");
   const [assetStyle, setAssetStyle] = useState<"assets" | "procedural">("assets");
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [audioVolume, setAudioVolume] = useState(0.18);
   const audioRef = useRef<AmbientAudio | null>(null);
@@ -512,6 +513,15 @@ export default function App() {
               <option value="assets">Real 3D assets</option>
               <option value="procedural">Procedural</option>
             </select>
+            <label>Diagnostics</label>
+            <div className="toggle-row">
+              <button
+                className={showDiagnostics ? "active" : "secondary"}
+                onClick={() => setShowDiagnostics((prev) => !prev)}
+              >
+                {showDiagnostics ? "Overlay on" : "Overlay off"}
+              </button>
+            </div>
             <label>Mood audio</label>
             <div className="toggle-row">
               <button
@@ -558,6 +568,7 @@ export default function App() {
               fields={fields}
               theme={pickTheme(activePreset)}
               assetStyle={assetStyle}
+              showDiagnostics={showDiagnostics}
             />
           </div>
         </main>
