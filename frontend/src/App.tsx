@@ -87,6 +87,9 @@ const pickTheme = (presetId: string) => {
   if (presetId.includes("space")) return "space";
   if (presetId.includes("fantasy")) return "fantasy";
   if (presetId.includes("dino")) return "dino";
+  if (presetId.includes("oceanic")) return "oceanic";
+  if (presetId.includes("frostbound")) return "frostbound";
+  if (presetId.includes("emberfall")) return "emberfall";
   return "living";
 };
 

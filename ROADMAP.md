@@ -36,6 +36,7 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 - [ ] Faction templates for lore worlds (e.g., “kingdoms”, “pirate fleets”)
 - [ ] WorldPack tooling: schema validation + editor helpers
 - [ ] Behavior libraries (role-based behaviors)
+ - [x] Expand worldpack library (oceanic, frostbound, emberfall)
 
 ## Phase 5.1 — World Identity & Differentiation (New)
 - [x] Distinct visual themes per worldpack (sky/terrain palettes, water tint, fog, lighting)
