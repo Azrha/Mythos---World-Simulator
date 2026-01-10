@@ -1,4 +1,4 @@
-# Weird physics: red objects float; blue objects get heavier;
+# Weird physics: red objects float, blue objects get heavier,
 # and unseen objects fade into gray before dying.
 
 const W = 256
@@ -39,5 +39,5 @@ end
 
 law wrap priority 1000
   when true
-  do wrap(W; H)
+  do wrap(W, H)
 end

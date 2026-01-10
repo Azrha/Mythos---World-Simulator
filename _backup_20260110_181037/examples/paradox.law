@@ -33,5 +33,5 @@ end
 
 law wrap priority 1000
   when true
-  do wrap(W; H)
+  do wrap(W, H)
 end

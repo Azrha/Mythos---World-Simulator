@@ -15,7 +15,7 @@ end
 # Metal is attracted to red objects (we treat color tags as strings)
 law red_magnetism priority 8
   when color == "metal"
-  do attract(70; 0.55; color == "red")
+  do attract(70, 0.55, color == "red")
 end
 
 # Things that aren't looked at slowly die
@@ -39,5 +39,5 @@ end
 # Wrap world edges
 law wrap priority 1000
   when true
-  do wrap(W; H)
+  do wrap(W, H)
 end

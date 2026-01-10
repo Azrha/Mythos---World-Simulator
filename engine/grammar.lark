@@ -1,24 +1,38 @@
 %import common.CNAME -> NAME
-%import common.SIGNED_NUMBER -> NUMBER
 %import common.WS_INLINE
 %import common.NEWLINE -> _NL
-
 %ignore WS_INLINE
+%ignore _NL
 
-// Comments (full-line or inline)
-COMMENT: /#[^\n]*/
-%ignore COMMENT
+start: (stmt)*
 
-start: (_NL | stmt)*
+stmt: const_stmt
+    | law_stmt
 
-stmt: const_stmt _NL*
-    | law_stmt _NL*
+// Const statement
+const_stmt: "const" NAME "=" REST_OF_LINE
 
-const_stmt: "const" NAME "=" LINE_EXPR
+// Law statement
+// explicit keywords allow us to strictly bound the regexes
+law_stmt: "law" NAME "priority" PRIO "when" CONDITION "do" action_block "end"
 
-law_stmt: "law" NAME "priority" NUMBER _NL* "when" LINE_EXPR _NL* "do" _NL* action_line+ "end"
+action_block: raw_action (";" raw_action)*
 
-action_line: ["do"] LINE_EXPR _NL+
+// Terminals
+// We prioritize explicit keywords "end" and "do" by defining them 
+// or using regex negative lookahead so generic text doesn't eat them.
 
-// Raw expression text until end-of-line (for const/when/assign/call)
-LINE_EXPR: /(?!(?:\s*(?:const|law|when|do|end)\b|\s*#))[^\n]+/
+// Priority number
+PRIO: /[-0-9.]+/
+
+// Condition: everything until 'do' keyword
+// We use a negative lookahead to ensure we don't consume 'do'
+CONDITION: /(?!do\b)[^#\n]+/
+
+// Raw action: everything until ';' or 'end' keyword
+// We ensure we don't consume 'end'
+raw_action: /(?!end\b)[^;\n#]+/
+
+// Helper for consts
+REST_OF_LINE: /[^#\n]+/
+

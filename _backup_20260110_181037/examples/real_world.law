@@ -1,4 +1,4 @@
-# A grounded starting universe with gravity; drag; and bounce.
+# A grounded starting universe with gravity, drag, and bounce.
 
 const W = 320
 const H = 200
@@ -36,19 +36,19 @@ end
 # Soft collisions to keep entities from stacking
 law collisions priority 18
   when true
-  do collide(3.2; 0.86; 0.06)
+  do collide(3.2, 0.86, 0.06)
 end
 
 # Bounce off walls with some energy loss
 law bounds priority 20
   when true
-  do bounce(W; H; 0.82)
+  do bounce(W, H, 0.82)
 end
 
 # Metal is attracted to red objects (simple magnetism)
 law red_magnetism priority 8
   when color == "metal"
-  do attract(70; 0.55; color == "red")
+  do attract(70, 0.55, color == "red")
 end
 
 # Sound can harden matter (local field)

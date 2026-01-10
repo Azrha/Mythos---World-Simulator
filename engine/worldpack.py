@@ -1,122 +1,79 @@
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
 import json
+import os
+from typing import Dict, Any, List
 
-
-@dataclass(frozen=True)
-class LawSpec:
-    name: str
-    priority: int
-    when: str
-    actions: List[str]
-
-
-@dataclass(frozen=True)
-class ProfileSpec:
-    name: str
-    color: str
-    count: int
-    mass_range: List[float]
-    hardness_range: List[float]
-    speed_range: List[float]
-    depth_range: List[float] | None = None
-    static: bool = False
-    energy_range: List[float] | None = None
-    wealth_range: List[float] | None = None
-
-
-@dataclass(frozen=True)
 class WorldPack:
-    name: str
-    description: str
-    consts: Dict[str, Any]
-    laws: List[LawSpec]
-    profiles: List[ProfileSpec]
-    seed: int = 42
-
-
-def _require(obj: Dict[str, Any], key: str, typ):
-    if key not in obj:
-        raise ValueError(f"WorldPack missing required field: {key}")
-    val = obj[key]
-    if not isinstance(val, typ):
-        raise ValueError(f"WorldPack field '{key}' must be {typ}")
-    return val
-
-
-def _coerce_profile(data: Dict[str, Any]) -> ProfileSpec:
-    name = _require(data, "name", str)
-    color = _require(data, "color", str)
-    count = int(_require(data, "count", int))
-    mass_range = _require(data, "mass_range", list)
-    hardness_range = _require(data, "hardness_range", list)
-    speed_range = _require(data, "speed_range", list)
-    depth_range = data.get("depth_range")
-    static = bool(data.get("static", False))
-    energy_range = data.get("energy_range")
-    wealth_range = data.get("wealth_range")
-    if energy_range is not None:
-        energy_range = [float(energy_range[0]), float(energy_range[1])]
-    if wealth_range is not None:
-        wealth_range = [float(wealth_range[0]), float(wealth_range[1])]
-    if depth_range is not None:
-        depth_range = [float(depth_range[0]), float(depth_range[1])]
-    return ProfileSpec(
-        name=name,
-        color=color,
-        count=count,
-        mass_range=[float(mass_range[0]), float(mass_range[1])],
-        hardness_range=[float(hardness_range[0]), float(hardness_range[1])],
-        speed_range=[float(speed_range[0]), float(speed_range[1])],
-        depth_range=depth_range,
-        static=static,
-        energy_range=energy_range,
-        wealth_range=wealth_range,
-    )
-
-
-def _coerce_law(data: Dict[str, Any]) -> LawSpec:
-    name = _require(data, "name", str)
-    priority = int(_require(data, "priority", int))
-    when = _require(data, "when", str)
-    actions = _require(data, "actions", list)
-    return LawSpec(name=name, priority=priority, when=when, actions=[str(a) for a in actions])
-
-
-def load_worldpack_json(text: str) -> WorldPack:
-    raw = json.loads(text)
-    if not isinstance(raw, dict):
-        raise ValueError("WorldPack JSON must be an object")
-    name = _require(raw, "name", str)
-    description = _require(raw, "description", str)
-    consts = _require(raw, "consts", dict)
-    laws = [_coerce_law(l) for l in _require(raw, "laws", list)]
-    profiles = [_coerce_profile(p) for p in _require(raw, "profiles", list)]
-    seed = int(raw.get("seed", 42))
-    return WorldPack(
-        name=name,
-        description=description,
-        consts=consts,
-        laws=laws,
-        profiles=profiles,
-        seed=seed,
-    )
-
-
-def worldpack_to_dsl(pack: WorldPack) -> str:
-    lines: List[str] = []
-    for k, v in pack.consts.items():
-        lines.append(f"const {k} = {v}")
-    lines.append("")
-    for law in pack.laws:
-        lines.append(f"law {law.name} priority {law.priority}")
-        lines.append(f"  when {law.when}")
-        if law.actions:
-            lines.append(f"  do {law.actions[0]}")
-            for action in law.actions[1:]:
-                lines.append(f"  do {action}")
-        lines.append("end")
+    def __init__(self, data: Dict[str, Any]):
+        self.data = data
+            
+    @property
+    def dsl(self) -> str:
+        lines = []
+        if "consts" in self.data:
+            for k, v in self.data["consts"].items():
+                lines.append(f"const {k} = {v}")
+        
         lines.append("")
-    return "\n".join(lines).strip() + "\n"
+        
+        if "laws" in self.data:
+            for law in self.data["laws"]:
+                name = law.get("name", "Unknown")
+                prio = law.get("priority", 1)
+                cond = law.get("when", "true")
+                actions = law.get("actions", [])
+                
+                if isinstance(actions, list):
+                    action_str = "; ".join(actions)
+                else:
+                    action_str = str(actions)
+
+                lines.append(f"law {name} priority {prio}")
+                lines.append(f"  when {cond}")
+                lines.append(f"  do {action_str}")
+                lines.append("end")
+                lines.append("")
+                
+        return "\n".join(lines)
+
+def load_worldpack_json(name_or_data: str) -> Dict[str, Any]:
+    # Check if input is a JSON string (sim_service passes file content)
+    s = name_or_data.strip()
+    if s.startswith("{") and s.endswith("}"):
+        try:
+            return json.loads(s)
+        except json.JSONDecodeError:
+            pass # Fallthrough to file check
+            
+    # Check if input is a filename
+    base = os.path.join(os.path.dirname(__file__), "..", "examples", "worldpacks")
+    path = os.path.join(base, s)
+    if not os.path.exists(path) and not s.endswith(".json"):
+        path += ".json"
+    
+    if not os.path.exists(path):
+        # Fallback relative to root
+        if os.path.exists(f"examples/worldpacks/{s}.json"):
+             path = f"examples/worldpacks/{s}.json"
+        elif os.path.exists(s): # Absolute or direct path
+             path = s
+        else:
+             # Just in case it WAS a broken JSON string that failed decode
+             if len(s) > 200: 
+                 raise ValueError("Input looks like raw JSON but failed to decode.")
+             raise FileNotFoundError(f"Worldpack not found: {s}")
+        
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def worldpack_to_dsl(data: Dict[str, Any]) -> str:
+    return WorldPack(data).dsl
+
+def load_worldpack(name: str) -> Dict[str, Any]:
+    data = load_worldpack_json(name)
+    return {
+        "name": data.get("name", name),
+        "description": data.get("description", ""),
+        "dsl": worldpack_to_dsl(data),
+        "profiles": data.get("profiles", []),
+        "seed": data.get("seed", 42)
+    }

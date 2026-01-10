@@ -49,26 +49,36 @@ class SimulationService:
     def load_worldpack(self, name: str) -> Dict[str, Any]:
         base = Path("examples/worldpacks")
         path = base / name
+        # pack is now a dict
         pack = load_worldpack_json(path.read_text(encoding="utf-8"))
+        
+        # safely get profiles, assuming they are already dicts in the JSON
+        profiles = pack.get("profiles", [])
+        
         return {
-            "name": pack.name,
-            "description": pack.description,
+            "name": pack.get("name", "Unknown"),
+            "description": pack.get("description", ""),
             "dsl": worldpack_to_dsl(pack),
-            "profiles": [p.__dict__ for p in pack.profiles],
-            "seed": pack.seed,
+            "profiles": profiles,
+            "seed": pack.get("seed", 42),
         }
 
     def list_presets(self) -> List[Dict[str, Any]]:
         base = Path("examples/worldpacks")
         items = []
         for path in base.glob("*.json"):
-            pack = load_worldpack_json(path.read_text(encoding="utf-8"))
-            items.append({
-                "id": path.name,
-                "name": pack.name,
-                "description": pack.description,
-                "seed": pack.seed,
-            })
+            try:
+                # pack is a dict
+                pack = load_worldpack_json(path.read_text(encoding="utf-8"))
+                items.append({
+                    "id": path.name,
+                    "name": pack.get("name", path.stem),
+                    "description": pack.get("description", ""),
+                    "seed": pack.get("seed", 42),
+                })
+            except Exception as e:
+                logger.warning(f"Failed to load preset {path}: {e}")
+                
         return sorted(items, key=lambda x: x["name"])
 
     async def apply_program(
