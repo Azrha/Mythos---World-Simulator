@@ -54,9 +54,9 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 - [x] World-specific asset sets (fantasy vs dino vs space visuals)
 
 ## Phase 6 — Observability & QA
-- [ ] Diagnostics overlays (energy, density, motion)
-- [ ] Performance tests and reproducibility report
-- [ ] Snapshot render diffs for regressions
+- [x] Diagnostics overlays (energy, density, motion)
+- [x] Performance tests and reproducibility report
+- [x] Snapshot render diffs for regressions
 
 ## Future Ideas to Add (Review and Expand)
 - Ecosystem reproduction and aging curves
