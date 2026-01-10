@@ -65,17 +65,17 @@ ensure_venv() {
   echo "[INFO] Using venv: $venv_dir"
   if [[ ! -d "$venv_dir" ]]; then
     echo "[INFO] Creating virtualenv..."
-    python3 -m venv "$venv_dir"
+    python3 -m venv --upgrade-deps "$venv_dir"
   else
     local activate_path="$venv_dir/bin/activate"
     if [[ -f "$activate_path" ]] && ! grep -q "$ROOT_DIR" "$activate_path"; then
       echo "[WARN] Venv path moved; repairing virtualenv..."
-      python3 -m venv --upgrade "$venv_dir"
+      python3 -m venv --upgrade-deps "$venv_dir"
     fi
   fi
   # shellcheck disable=SC1090
   source "$venv_dir/bin/activate"
-  python -m pip install -r requirements.txt
+  "$venv_dir/bin/python" -m pip install -r requirements.txt
   if command -v nvidia-smi >/dev/null 2>&1; then
     python - <<'PY' >/dev/null 2>&1 || pip install cupy-cuda12x
 import cupy  # noqa: F401

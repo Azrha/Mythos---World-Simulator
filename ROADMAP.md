@@ -35,6 +35,14 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 - [ ] WorldPack tooling: schema validation + editor helpers
 - [ ] Behavior libraries (role-based behaviors)
 
+## Phase 5.1 — World Identity & Differentiation (New)
+- [ ] Distinct visual themes per worldpack (sky/terrain palettes, water tint, fog, lighting)
+- [ ] Unique species rosters per worldpack (avoid reusing human/alien/building defaults)
+- [ ] World-specific physics profiles (gravity/drag/collision ranges tuned per setting)
+- [ ] Terrain + climate signatures per world (seed/scale, rainfall, fertility bias)
+- [ ] Per-world sound/mood profiles (ambient emitters + seasonal intensity curves)
+- [ ] Validation rule: each worldpack must change at least 3 axes (visual, species, physics, terrain)
+
 ## Phase 6 — Observability & QA
 - [ ] Diagnostics overlays (energy, density, motion)
 - [ ] Performance tests and reproducibility report
@@ -55,3 +63,8 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 - Infrastructure decay and repair loops
 - Cultural diffusion and influence fields
 - Ocean/river shipping lanes
+
+## Current Findings (Post-Move Review)
+- WorldPacks share too many defaults (humans/aliens/buildings), so worlds feel visually similar.
+- Terrain/lighting themes are not explicitly tied to worldpack identity.
+- Behavior sets overlap heavily; unique ecology loops per world are limited.
