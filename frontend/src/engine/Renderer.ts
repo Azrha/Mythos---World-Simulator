@@ -692,82 +692,205 @@ export class Renderer {
     const limbs: THREE.Mesh[] = [];
     const pickables: THREE.Mesh[] = [];
 
-    const bodyGeom = new THREE.SphereGeometry(1, 20, 16);
-    const headGeom = new THREE.SphereGeometry(0.55, 16, 12);
     const limbGeom = new THREE.CylinderGeometry(0.12, 0.2, 1.0, 10);
+    const armGeom = new THREE.CylinderGeometry(0.1, 0.18, 0.9, 10);
     const tailGeom = new THREE.ConeGeometry(0.25, 1.1, 12);
 
-    let body = new THREE.Mesh(bodyGeom, bodyMat);
-    body.castShadow = true;
-    body.receiveShadow = true;
-    group.add(body);
-    this.registerPickable(body, entity.id, pickables);
-
+    let body: THREE.Mesh;
     let head: THREE.Mesh | undefined;
     let tail: THREE.Mesh | undefined;
     let crest: THREE.Mesh | undefined;
     let halo: THREE.Mesh | undefined;
 
     if (kind === "building") {
-      const base = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 1.4), bodyMat);
-      base.position.y = 0.7;
-      base.castShadow = true;
-      base.receiveShadow = true;
-      group.add(base);
-      this.registerPickable(base, entity.id, pickables);
+      body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.4, 1.6), bodyMat);
+      body.position.y = 0.8;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+      this.registerPickable(body, entity.id, pickables);
 
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.0, 0.8, 4), accentMat);
-      roof.position.y = 1.6;
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.15, 0.9, 4), accentMat);
+      roof.position.y = 1.85;
       roof.rotation.y = Math.PI * 0.25;
       roof.castShadow = true;
       group.add(roof);
       this.registerPickable(roof, entity.id, pickables);
 
-      body.visible = false;
+      const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 1.2, 8), accentMat);
+      tower.position.set(-0.6, 1.4, -0.4);
+      tower.castShadow = true;
+      group.add(tower);
+      this.registerPickable(tower, entity.id, pickables);
     } else if (kind === "tree") {
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 1.8, 12), metalMat);
-      trunk.position.y = 0.9;
-      trunk.castShadow = true;
-      trunk.receiveShadow = true;
-      group.add(trunk);
-      this.registerPickable(trunk, entity.id, pickables);
+      body = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 2.1, 12), metalMat);
+      body.position.y = 1.05;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+      this.registerPickable(body, entity.id, pickables);
 
-      const canopy = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 12), bodyMat);
-      canopy.position.y = 2.0;
-      canopy.castShadow = true;
-      group.add(canopy);
-      this.registerPickable(canopy, entity.id, pickables);
+      const canopyA = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 12), bodyMat);
+      canopyA.position.set(0, 2.2, 0.0);
+      canopyA.castShadow = true;
+      group.add(canopyA);
+      this.registerPickable(canopyA, entity.id, pickables);
 
-      body.visible = false;
-    } else {
-      if (kind === "dino") {
-        body.scale.set(1.4, 0.8, 2.0);
-      } else if (kind === "humanoid") {
-        body.scale.set(0.9, 1.4, 0.6);
-      } else if (kind === "alien") {
-        body.scale.set(1.2, 1.6, 1.0);
-      } else {
-        body.scale.set(1.2, 1.0, 1.3);
-      }
+      const canopyB = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 12), bodyMat);
+      canopyB.position.set(0.6, 2.0, -0.3);
+      canopyB.castShadow = true;
+      group.add(canopyB);
+      this.registerPickable(canopyB, entity.id, pickables);
 
-      head = new THREE.Mesh(headGeom, accentMat);
-      head.position.set(0, kind === "humanoid" ? 1.6 : 0.9, kind === "dino" ? 1.2 : 1.0);
+      const canopyC = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 12), bodyMat);
+      canopyC.position.set(-0.5, 2.0, 0.4);
+      canopyC.castShadow = true;
+      group.add(canopyC);
+      this.registerPickable(canopyC, entity.id, pickables);
+    } else if (kind === "machine") {
+      body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 1.6), bodyMat);
+      body.position.y = 0.9;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+      this.registerPickable(body, entity.id, pickables);
+
+      halo = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.08, 10, 24), metalMat);
+      halo.position.y = 1.4;
+      halo.rotation.x = Math.PI / 2;
+      group.add(halo);
+      this.registerPickable(halo, entity.id, pickables);
+
+      const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.6, 8), accentMat);
+      antenna.position.set(0.0, 1.7, 0.5);
+      antenna.castShadow = true;
+      group.add(antenna);
+      this.registerPickable(antenna, entity.id, pickables);
+    } else if (kind === "dino") {
+      body = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 1.6, 6, 12), bodyMat);
+      body.rotation.x = Math.PI / 2;
+      body.scale.set(1.4, 1.0, 1.2);
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+      this.registerPickable(body, entity.id, pickables);
+
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.28, 0.8, 8), accentMat);
+      neck.position.set(0, 0.6, 1.1);
+      neck.rotation.x = Math.PI / 6;
+      neck.castShadow = true;
+      group.add(neck);
+      this.registerPickable(neck, entity.id, pickables);
+
+      head = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 12), accentMat);
+      head.position.set(0, 0.95, 1.45);
       head.castShadow = true;
       group.add(head);
       this.registerPickable(head, entity.id, pickables);
 
-      for (let i = 0; i < 4; i += 1) {
-        const limb = new THREE.Mesh(limbGeom, metalMat);
-        limb.position.set(i < 2 ? -0.45 : 0.45, 0.4, i % 2 === 0 ? -0.6 : 0.6);
-        limb.castShadow = true;
-        limbs.push(limb);
-        group.add(limb);
-        this.registerPickable(limb, entity.id, pickables);
+      tail = new THREE.Mesh(new THREE.ConeGeometry(0.28, 1.6, 12), accentMat);
+      tail.position.set(0, 0.3, -1.5);
+      tail.rotation.x = -Math.PI / 2;
+      tail.castShadow = true;
+      group.add(tail);
+      this.registerPickable(tail, entity.id, pickables);
+
+      const legOffsets = [
+        [-0.45, 0.3, 0.6],
+        [0.45, 0.3, 0.6],
+        [-0.5, 0.3, -0.4],
+        [0.5, 0.3, -0.4],
+      ];
+      legOffsets.forEach(([x, y, z]) => {
+        const leg = new THREE.Mesh(limbGeom, metalMat);
+        leg.position.set(x, y, z);
+        leg.castShadow = true;
+        limbs.push(leg);
+        group.add(leg);
+        this.registerPickable(leg, entity.id, pickables);
+      });
+    } else if (kind === "animal") {
+      body = new THREE.Mesh(new THREE.CapsuleGeometry(0.45, 1.2, 6, 12), bodyMat);
+      body.rotation.x = Math.PI / 2;
+      body.scale.set(1.2, 1.0, 1.1);
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+      this.registerPickable(body, entity.id, pickables);
+
+      head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 12), accentMat);
+      head.position.set(0, 0.45, 1.1);
+      head.castShadow = true;
+      group.add(head);
+      this.registerPickable(head, entity.id, pickables);
+
+      tail = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.8, 10), accentMat);
+      tail.position.set(0, 0.35, -1.0);
+      tail.rotation.x = -Math.PI / 2;
+      tail.castShadow = true;
+      group.add(tail);
+      this.registerPickable(tail, entity.id, pickables);
+
+      const legOffsets = [
+        [-0.35, 0.2, 0.5],
+        [0.35, 0.2, 0.5],
+        [-0.35, 0.2, -0.3],
+        [0.35, 0.2, -0.3],
+      ];
+      legOffsets.forEach(([x, y, z]) => {
+        const leg = new THREE.Mesh(limbGeom, metalMat);
+        leg.position.set(x, y, z);
+        leg.castShadow = true;
+        limbs.push(leg);
+        group.add(leg);
+        this.registerPickable(leg, entity.id, pickables);
+      });
+    } else {
+      body = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 1.1, 6, 12), bodyMat);
+      body.position.y = 0.95;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+      this.registerPickable(body, entity.id, pickables);
+
+      head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 12), accentMat);
+      head.position.set(0, 1.8, 0.1);
+      head.castShadow = true;
+      if (kind === "alien") {
+        head.scale.set(1.0, 1.4, 1.0);
       }
+      group.add(head);
+      this.registerPickable(head, entity.id, pickables);
+
+      const legOffsets = [
+        [-0.2, 0.3, 0.15],
+        [0.2, 0.3, 0.15],
+      ];
+      legOffsets.forEach(([x, y, z]) => {
+        const leg = new THREE.Mesh(limbGeom, metalMat);
+        leg.position.set(x, y, z);
+        leg.castShadow = true;
+        limbs.push(leg);
+        group.add(leg);
+        this.registerPickable(leg, entity.id, pickables);
+      });
+
+      const armOffsets = [
+        [-0.55, 1.2, 0.0],
+        [0.55, 1.2, 0.0],
+      ];
+      armOffsets.forEach(([x, y, z]) => {
+        const arm = new THREE.Mesh(armGeom, metalMat);
+        arm.position.set(x, y, z);
+        arm.castShadow = true;
+        limbs.push(arm);
+        group.add(arm);
+        this.registerPickable(arm, entity.id, pickables);
+      });
 
       if (kind !== "humanoid") {
         tail = new THREE.Mesh(tailGeom, accentMat);
-        tail.position.set(0, 0.6, -1.4);
+        tail.position.set(0, 0.7, -0.9);
         tail.rotation.x = Math.PI * 0.6;
         tail.castShadow = true;
         group.add(tail);
@@ -775,19 +898,11 @@ export class Renderer {
       }
 
       if (kind === "alien") {
-        crest = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.08, 10, 24), accentMat);
-        crest.position.y = 1.2;
+        crest = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.07, 10, 24), accentMat);
+        crest.position.y = 1.4;
         crest.rotation.x = Math.PI / 2;
         group.add(crest);
         this.registerPickable(crest, entity.id, pickables);
-      }
-
-      if (kind === "machine") {
-        halo = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.1, 10, 24), metalMat);
-        halo.position.y = 1.2;
-        halo.rotation.x = Math.PI / 2;
-        group.add(halo);
-        this.registerPickable(halo, entity.id, pickables);
       }
     }
 

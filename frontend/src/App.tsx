@@ -293,7 +293,7 @@ export default function App() {
     if (autoStarted) return;
     if (!backendReady || presets.length === 0) return;
     const target = presets.find((preset) => preset.id === DEFAULT_PRESET_ID) || presets[0];
-    const autoStart = async () => {
+    const autoInit = async () => {
       const detail = await loadPreset(target.id);
       if (!detail) return;
       setAutoStarted(true);
@@ -304,10 +304,25 @@ export default function App() {
         n,
         backend,
       });
-      await sendRun(true);
     };
-    void autoStart();
+    void autoInit();
   }, [backendReady, presets, autoStarted]);
+
+  const handlePresetChange = async (value: string) => {
+    if (!value) return;
+    if (run) {
+      await sendRun(false);
+    }
+    const detail = await loadPreset(value);
+    if (!detail) return;
+    await applyProgram({
+      dsl: detail.dsl,
+      profiles: detail.profiles || null,
+      seed: detail.seed || 42,
+      n,
+      backend,
+    });
+  };
 
   const openPopup = () => {
     window.open("/viewer", "mythos_viewer", "width=1400,height=900");
@@ -362,7 +377,7 @@ export default function App() {
           <section className="card">
             <h3>Scenario</h3>
             <label>Preset</label>
-            <select value={activePreset} onChange={(e) => loadPreset(e.target.value)}>
+            <select value={activePreset} onChange={(e) => handlePresetChange(e.target.value)}>
               <option value="">{loadingPresets ? "Loading..." : "Select a preset"}</option>
               {presets.map((p) => (
                 <option key={p.id} value={p.id}>
