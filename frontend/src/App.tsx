@@ -103,6 +103,7 @@ export default function App() {
   const [gpuAvailable, setGpuAvailable] = useState(false);
   const [backendReady, setBackendReady] = useState(false);
   const [mode, setMode] = useState<"2d" | "3d">("3d");
+  const [assetStyle, setAssetStyle] = useState<"assets" | "procedural">("assets");
   const [loadingPresets, setLoadingPresets] = useState(true);
   const [loadingPreset, setLoadingPreset] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -489,6 +490,11 @@ export default function App() {
                 Tactical 2D
               </button>
             </div>
+            <label>3D assets</label>
+            <select value={assetStyle} onChange={(e) => setAssetStyle(e.target.value as "assets" | "procedural")}>
+              <option value="assets">Real 3D assets</option>
+              <option value="procedural">Procedural</option>
+            </select>
             <div className="hint">Drag to orbit. Scroll to zoom. Click to inspect.</div>
             <button className="secondary" onClick={openPopup}>
               Popout 3D View
@@ -516,6 +522,7 @@ export default function App() {
               onSelect={setSelectedId}
               fields={fields}
               theme={pickTheme(activePreset)}
+              assetStyle={assetStyle}
             />
           </div>
         </main>

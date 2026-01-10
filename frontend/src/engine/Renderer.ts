@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { SkeletonUtils } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { ASSET_KIND_FALLBACK, ASSET_MANIFEST, AssetSpec, AssetStyle } from "./assets";
 
 export type Entity = {
   id: number;
@@ -301,6 +304,13 @@ export class Renderer {
   private needsTerrainRebuild = true;
   private themeId = "living";
   private theme = THEMES.living;
+  private assetStyle: AssetStyle = "assets";
+  private assetsReady = false;
+  private pendingEntities: Entity[] | null = null;
+  private assetLoader = new GLTFLoader();
+  private assetSpecs = ASSET_MANIFEST;
+  private assetBase = new Map<string, THREE.Object3D>();
+  private assetPromises = new Map<string, Promise<THREE.Object3D>>();
 
   constructor(canvas: HTMLCanvasElement) {
     const renderer = new THREE.WebGLRenderer({
@@ -637,6 +647,85 @@ export class Renderer {
 
   setEntities(entities: Entity[]) {
     this.entities = entities;
+    if (this.assetStyle === "assets" && !this.assetsReady) {
+      this.pendingEntities = entities;
+      return;
+    }
+    this.applyEntities(entities);
+  }
+
+  setAssetStyle(style: AssetStyle) {
+    if (this.assetStyle === style) return;
+    this.assetStyle = style;
+    if (style === "assets") {
+      this.assetsReady = false;
+      this.pendingEntities = null;
+      void this.preloadAssets();
+    } else {
+      this.assetsReady = true;
+      if (this.pendingEntities) {
+        const pending = this.pendingEntities;
+        this.pendingEntities = null;
+        this.applyEntities(pending);
+      }
+    }
+  }
+
+  async preloadAssets() {
+    const keys = Object.keys(this.assetSpecs);
+    await Promise.all(
+      keys.map((key) =>
+        this.loadAssetBase(key).catch(() => null)
+      )
+    );
+    this.assetsReady = true;
+    if (this.pendingEntities) {
+      const pending = this.pendingEntities;
+      this.pendingEntities = null;
+      this.applyEntities(pending);
+    }
+  }
+
+  private resolveAssetKey(entity: Entity) {
+    const colorKey = entity.color.trim().toLowerCase();
+    if (this.assetSpecs[colorKey]) return colorKey;
+    const kindKey = ASSET_KIND_FALLBACK[kindFrom(entity)];
+    return kindKey || "settler";
+  }
+
+  private loadAssetBase(key: string): Promise<THREE.Object3D> {
+    if (this.assetBase.has(key)) {
+      return Promise.resolve(this.assetBase.get(key) as THREE.Object3D);
+    }
+    if (this.assetPromises.has(key)) {
+      return this.assetPromises.get(key) as Promise<THREE.Object3D>;
+    }
+    const spec = this.assetSpecs[key];
+    if (!spec) return Promise.reject(new Error(`Missing asset spec for ${key}`));
+    const promise = new Promise<THREE.Object3D>((resolve, reject) => {
+      this.assetLoader.load(
+        spec.url,
+        (gltf) => {
+          const scene = gltf.scene || gltf.scenes[0];
+          scene.traverse((node) => {
+            if ((node as THREE.Mesh).isMesh) {
+              const mesh = node as THREE.Mesh;
+              mesh.castShadow = true;
+              mesh.receiveShadow = true;
+            }
+          });
+          this.assetBase.set(key, scene);
+          resolve(scene);
+        },
+        undefined,
+        (err) => reject(err)
+      );
+    });
+    this.assetPromises.set(key, promise);
+    return promise;
+  }
+
+  private applyEntities(entities: Entity[]) {
     const liveIds = new Set(entities.map((e) => e.id));
     for (const [id, rig] of this.rigs.entries()) {
       if (!liveIds.has(id)) {
@@ -651,8 +740,10 @@ export class Renderer {
     for (const entity of entities) {
       if (!this.rigs.has(entity.id)) {
         const rig = this.createRig(entity);
-        this.rigs.set(entity.id, rig);
-        this.scene.add(rig.group);
+        if (rig) {
+          this.rigs.set(entity.id, rig);
+          this.scene.add(rig.group);
+        }
       }
     }
   }
@@ -663,7 +754,64 @@ export class Renderer {
     list.push(mesh);
   }
 
-  private createRig(entity: Entity): Rig {
+  private createRig(entity: Entity): Rig | null {
+    if (this.assetStyle === "assets") {
+      const assetRig = this.createAssetRig(entity);
+      if (assetRig) return assetRig;
+    }
+    return this.createProceduralRig(entity);
+  }
+
+  private createAssetRig(entity: Entity): Rig | null {
+    const kind = kindFrom(entity);
+    const assetKey = this.resolveAssetKey(entity);
+    const spec = this.assetSpecs[assetKey];
+    const base = spec ? this.assetBase.get(assetKey) : null;
+    if (!spec || !base) return null;
+
+    const clone = SkeletonUtils.clone(base);
+    const sizeFactor = clamp(entity.size || 4, 2.5, 8) / 4;
+    clone.scale.multiplyScalar(spec.scale * sizeFactor);
+    clone.rotation.y = spec.rotateY ?? 0;
+    clone.position.y = spec.yOffset ?? 0;
+
+    const group = new THREE.Group();
+    const limbs: THREE.Mesh[] = [];
+    const pickables: THREE.Mesh[] = [];
+    let body: THREE.Mesh | null = null;
+
+    clone.traverse((node) => {
+      if ((node as THREE.Mesh).isMesh) {
+        const mesh = node as THREE.Mesh;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        if (!body) body = mesh;
+        this.registerPickable(mesh, entity.id, pickables);
+      }
+    });
+
+    group.add(clone);
+
+    const phase = (entity.id * 0.37) % Math.PI;
+    const baseScale = spec.scale;
+
+    return {
+      id: entity.id,
+      kind,
+      group,
+      body: body || new THREE.Mesh(),
+      head: undefined,
+      limbs,
+      tail: undefined,
+      crest: undefined,
+      halo: undefined,
+      pickables,
+      baseScale,
+      phase,
+    };
+  }
+
+  private createProceduralRig(entity: Entity): Rig {
     const kind = kindFrom(entity);
     const baseColor = colorFrom(entity.color || "#f5d7b6");
     const accent = baseColor.clone().lerp(new THREE.Color("#ffffff"), 0.35);
@@ -987,8 +1135,13 @@ export class Renderer {
 
       const energy = clamp(entity.energy ?? 0.6, 0.1, 2.0);
       const intensity = 0.15 + energy * 0.25;
-      const mat = rig.body.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = intensity;
+      const material = rig.body.material;
+      const materials = Array.isArray(material) ? material : [material];
+      materials.forEach((mat) => {
+        if (mat && "emissiveIntensity" in mat) {
+          (mat as THREE.MeshStandardMaterial).emissiveIntensity = intensity;
+        }
+      });
 
       if (rig.kind === "building") {
         rig.group.scale.setScalar(rig.baseScale * 1.3);

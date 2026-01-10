@@ -16,6 +16,8 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 - [x] 3D render mode (interactive)
 - [x] Depth-aware palette + visual cues (size/opacity)
 - [x] Custom WebGL engine (React client)
+- [x] Real 3D asset pipeline (GLTF loader + caching + UI toggle)
+- [x] Per-world asset mapping (humanoids, fauna, dinos, structures)
 
 ## Phase 3 — Environment Complexity
 - [x] Terrain/heightmap and biomes (foundation)
@@ -42,6 +44,14 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 - [ ] Terrain + climate signatures per world (seed/scale, rainfall, fertility bias)
 - [ ] Per-world sound/mood profiles (ambient emitters + seasonal intensity curves)
 - [ ] Validation rule: each worldpack must change at least 3 axes (visual, species, physics, terrain)
+
+## Phase 5.2 — 3D Asset Integration Plan (New)
+- [x] Establish asset folder + attribution
+- [x] Import CC0/Apache-2.0 models and generate custom GLB assets
+- [x] Asset style switch (real assets vs procedural)
+- [ ] Model fidelity pass (higher detail trees, buildings, dinos)
+- [ ] Animated rigs per species (walk cycles and idle loops)
+- [ ] World-specific asset sets (fantasy vs dino vs space visuals)
 
 ## Phase 6 — Observability & QA
 - [ ] Diagnostics overlays (energy, density, motion)

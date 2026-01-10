@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Renderer, Entity } from "../engine/Renderer";
+import type { AssetStyle } from "../engine/assets";
 
 type FramePayload = {
   t: number;
@@ -28,6 +29,7 @@ type Props = {
   onSelect?: (id: number | null) => void;
   fields?: FieldPayload | null;
   theme?: string;
+  assetStyle?: AssetStyle;
 };
 
 const DEFAULT_API_BASE = "http://127.0.0.1:8000";
@@ -72,6 +74,7 @@ export default function EngineView({
   onSelect,
   fields,
   theme,
+  assetStyle = "assets",
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -81,6 +84,7 @@ export default function EngineView({
   const [hasFrame, setHasFrame] = React.useState(false);
   const [rendererReady, setRendererReady] = React.useState(false);
   const [rendererError, setRendererError] = React.useState<string | null>(null);
+  const [assetsReady, setAssetsReady] = React.useState(assetStyle !== "assets");
 
   const normalizedWsUrl = useMemo(() => {
     return normalizeWsUrl(apiBase);
@@ -150,6 +154,22 @@ export default function EngineView({
     if (!renderer || !theme) return;
     renderer.setTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) return;
+    setAssetsReady(assetStyle !== "assets");
+    renderer.setAssetStyle(assetStyle);
+    if (assetStyle === "assets") {
+      let active = true;
+      renderer.preloadAssets().then(() => {
+        if (active) setAssetsReady(true);
+      });
+      return () => {
+        active = false;
+      };
+    }
+  }, [assetStyle]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -301,6 +321,14 @@ export default function EngineView({
       {rendererError && (
         <div className="overlay">
           <div className="small">Renderer error: {rendererError}</div>
+        </div>
+      )}
+      {!assetsReady && (
+        <div className="overlay">
+          <div className="loading-bar" aria-label="Loading">
+            <div className="loading-bar__fill" />
+          </div>
+          <div className="small">Loading 3D models...</div>
         </div>
       )}
       {!hasFrame && (
