@@ -295,6 +295,53 @@ const THEMES: Record<string, Theme> = {
     fillIntensity: 0.45,
     stars: false
   }
+  ,
+  skyborne: {
+    id: "skyborne",
+    skyTop: "#66b6d9",
+    skyBottom: "#e8f5ff",
+    fog: "#cde6f5",
+    fogDensity: 0.0035,
+    terrainLow: "#5b7c8f",
+    terrainMid: "#6fa3a8",
+    terrainHigh: "#87bfae",
+    terrainPeak: "#c0d7d9",
+    fertilityTint: "#7dc2ad",
+    waterColor: "#4a86a3",
+    waterOpacity: 0.5,
+    waterLevel: -0.02,
+    heightScale: 0.85,
+    sunColor: "#e6f7ff",
+    sunIntensity: 1.2,
+    hemiTop: "#d7efff",
+    hemiBottom: "#365366",
+    fillColor: "#94d4ff",
+    fillIntensity: 0.45,
+    stars: false
+  },
+  ironwild: {
+    id: "ironwild",
+    skyTop: "#4a3a3a",
+    skyBottom: "#c28a5a",
+    fog: "#9a6a4a",
+    fogDensity: 0.0048,
+    terrainLow: "#3a2c28",
+    terrainMid: "#5a4a3a",
+    terrainHigh: "#7a5a4a",
+    terrainPeak: "#a07a5a",
+    fertilityTint: "#7a5a45",
+    waterColor: "#4a3a33",
+    waterOpacity: 0.35,
+    waterLevel: 0.08,
+    heightScale: 1.15,
+    sunColor: "#ffb36b",
+    sunIntensity: 1.1,
+    hemiTop: "#f0c49a",
+    hemiBottom: "#402820",
+    fillColor: "#e08c4a",
+    fillIntensity: 0.4,
+    stars: false
+  }
 };
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));

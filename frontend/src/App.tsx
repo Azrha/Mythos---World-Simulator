@@ -90,6 +90,8 @@ const pickTheme = (presetId: string) => {
   if (presetId.includes("oceanic")) return "oceanic";
   if (presetId.includes("frostbound")) return "frostbound";
   if (presetId.includes("emberfall")) return "emberfall";
+  if (presetId.includes("skyborne")) return "skyborne";
+  if (presetId.includes("ironwild")) return "ironwild";
   return "living";
 };
 

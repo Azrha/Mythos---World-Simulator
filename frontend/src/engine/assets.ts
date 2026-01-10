@@ -85,6 +85,20 @@ export const ASSET_SETS: Record<string, AssetSet> = {
     habitat: { ...BASE_ASSETS.habitat, tint: "#b55b3f", emissive: "#ff7a3d" },
     grove: { ...BASE_ASSETS.grove, tint: "#6b3f2f" },
   },
+  skyborne: {
+    ...BASE_ASSETS,
+    settler: { ...BASE_ASSETS.settler, tint: "#cfe7ff" },
+    beast: { ...BASE_ASSETS.beast, tint: "#9ac7ff" },
+    obelisk: { ...BASE_ASSETS.obelisk, tint: "#cbe2ff", emissive: "#cbe2ff" },
+    grove: { ...BASE_ASSETS.grove, tint: "#6f9bb0" },
+  },
+  ironwild: {
+    ...BASE_ASSETS,
+    tribe: { ...BASE_ASSETS.tribe, tint: "#b6b0a7" },
+    synth: { ...BASE_ASSETS.synth, tint: "#9aa2ad", metalness: 0.75 },
+    outsider: { ...BASE_ASSETS.outsider, tint: "#7fd4ff" },
+    habitat: { ...BASE_ASSETS.habitat, tint: "#8a6b58", emissive: "#ff9450" },
+  },
 };
 
 export const ASSET_KIND_FALLBACK: Record<string, string> = {

@@ -2,10 +2,10 @@
   "id": "living_world.json",
   "name": "Living World",
   "entities": 260,
-  "avg_x": 186.3935,
-  "avg_y": 162.9204,
-  "avg_vx": 0.007,
-  "avg_vy": 3.501,
-  "avg_energy": 2.974,
+  "avg_x": 186.3415,
+  "avg_y": 163.0992,
+  "avg_vx": -0.0184,
+  "avg_vy": 3.5058,
+  "avg_energy": 2.9739,
   "avg_wealth": 0.2047
 }

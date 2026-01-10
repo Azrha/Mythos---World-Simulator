@@ -2,10 +2,10 @@
   "id": "oceanic_realm.json",
   "name": "Oceanic Realm",
   "entities": 228,
-  "avg_x": 187.7655,
-  "avg_y": 158.8055,
-  "avg_vx": 0.0016,
-  "avg_vy": 2.8084,
-  "avg_energy": 3.1418,
+  "avg_x": 187.716,
+  "avg_y": 158.7808,
+  "avg_vx": 0.001,
+  "avg_vy": 2.804,
+  "avg_energy": 3.142,
   "avg_wealth": 0.237
 }
