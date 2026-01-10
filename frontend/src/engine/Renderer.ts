@@ -415,7 +415,7 @@ export class Renderer {
   private clock = new THREE.Clock();
   private raycaster = new THREE.Raycaster();
   private pickables: THREE.Mesh[] = [];
-  private orbit = { azimuth: 0.4, polar: 0.55, distance: 160, target: new THREE.Vector3() };
+  private orbit = { azimuth: Math.PI / 4, polar: 0.95, distance: 160, target: new THREE.Vector3() };
   private pointer = { down: false, x: 0, y: 0 };
   private heightScale = 6;
   private needsTerrainRebuild = true;
@@ -847,9 +847,17 @@ export class Renderer {
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(1.5, 1.5);
+    texture.repeat.set(1, 1);
     this.themeTexture = texture;
     return texture;
+  }
+
+  private computeTextureRepeat(mesh: THREE.Mesh) {
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const base = Math.max(size.x, size.z, 0.8);
+    return clamp(base / 2.4, 0.6, 2.4);
   }
 
   private applyMaterialOverrides(mesh: THREE.Mesh, spec: AssetSpec) {
@@ -859,7 +867,13 @@ export class Renderer {
       if (!mat || !(mat as THREE.MeshStandardMaterial).isMeshStandardMaterial) return;
       const standard = mat as THREE.MeshStandardMaterial;
       if (!standard.map && texture) {
-        standard.map = texture;
+        const local = texture.clone();
+        const repeat = this.computeTextureRepeat(mesh);
+        local.wrapS = THREE.RepeatWrapping;
+        local.wrapT = THREE.RepeatWrapping;
+        local.repeat.set(repeat, repeat);
+        local.needsUpdate = true;
+        standard.map = local;
         standard.needsUpdate = true;
       }
       if (spec.tint) {

@@ -17,5 +17,12 @@ export default function Viewer() {
   } catch {
     base = "http://127.0.0.1:8000";
   }
-  return <EngineView mode="3d" apiBase={base} assetStyle="assets" showDiagnostics={false} />;
+  const params = new URLSearchParams(window.location.search);
+  const theme = (params.get("theme") || "living").trim();
+  const assetStyle = (params.get("assets") || "assets").trim() as "assets" | "procedural";
+  const modeParam = (params.get("mode") || "3d").trim();
+  const mode = modeParam === "2d" ? "2d" : "3d";
+  return (
+    <EngineView mode={mode} apiBase={base} assetStyle={assetStyle} showDiagnostics={false} theme={theme} />
+  );
 }

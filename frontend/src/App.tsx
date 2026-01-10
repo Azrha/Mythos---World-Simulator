@@ -349,7 +349,13 @@ export default function App() {
   };
 
   const openPopup = () => {
-    window.open("/viewer", "mythos_viewer", "width=1400,height=900");
+    const theme = pickTheme(activePreset);
+    const params = new URLSearchParams({
+      theme,
+      assets: assetStyle,
+      mode,
+    });
+    window.open(`/viewer?${params.toString()}`, "mythos_viewer", "width=1400,height=900");
   };
 
   const handleFrame = (payload: FramePayload) => {
