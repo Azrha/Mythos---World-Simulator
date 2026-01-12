@@ -79,3 +79,15 @@ An alive world is a system where autonomous agents exhibit persistent motion, so
 - WorldPacks share too many defaults (humans/aliens/buildings), so worlds feel visually similar.
 - Terrain/lighting themes are not explicitly tied to worldpack identity.
 - Behavior sets overlap heavily; unique ecology loops per world are limited.
+
+## Phase 5.3 — Comprehensive 3D Asset Upgrade (Completed)
+- [x] Integrated "RobotExpressive" for generic humanoids/synths.
+- [x] Integrated "CesiumMan" for settlers.
+- [x] Integrated "Soldier" for tribes/warriors.
+- [x] Integrated "Pilot/Astronaut" for space/sky themes.
+- [x] Integrated "Fox" for standard animals/beasts.
+- [x] Integrated "BarramundiFish" for Oceanic fauna.
+- [x] Integrated "DragonAttenuation" for Fantasy/Dino behemoths.
+- [x] Integrated "Buggy" for Ironwild machines.
+- [x] Configured per-world asset sets (Oceanic, Frostbound, Emberfall, etc.).
+- [x] Applied auto-normalization to fix scale issues across all models.

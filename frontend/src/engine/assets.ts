@@ -9,61 +9,120 @@ export type AssetSpec = {
   emissive?: string;
   roughness?: number;
   metalness?: number;
+  targetHeight?: number;
+  heightRange?: [number, number];
+  targetExtent?: number;
+  extentRange?: [number, number];
 };
 
 export type AssetSet = Record<string, AssetSpec>;
 
-const BASE_ASSETS: AssetSet = {
-  settler: { url: "/assets/models/external/neil_armstrong.glb", scale: 0.9 },
-  tribe: { url: "/assets/models/external/soldier.glb", scale: 0.9 },
-  pilot: { url: "/assets/models/external/astronaut.glb", scale: 0.9 },
-  fae: { url: "/assets/models/external/astronaut.glb", scale: 0.85 },
-  fauna: { url: "/assets/models/external/horse.glb", scale: 0.7 },
-  beast: { url: "/assets/models/external/horse.glb", scale: 0.75 },
-  outsider: { url: "/assets/models/generated/alien.glb", scale: 0.9 },
-  voidborn: { url: "/assets/models/generated/alien.glb", scale: 0.95 },
-  synth: { url: "/assets/models/external/robot_expressive.glb", scale: 0.8 },
-  habitat: { url: "/assets/models/generated/habitat.glb", scale: 1.0 },
-  obelisk: { url: "/assets/models/generated/obelisk.glb", scale: 1.1 },
-  station: { url: "/assets/models/external/rocket_ship.glb", scale: 1.4, rotateY: Math.PI },
-  grove: { url: "/assets/models/generated/tree.glb", scale: 1.1 },
-  cycad: { url: "/assets/models/generated/cycad.glb", scale: 1.1 },
-  saurian: { url: "/assets/models/generated/dino.glb", scale: 1.05 },
-  raptor: { url: "/assets/models/generated/dino.glb", scale: 0.85 },
-  wyrm: { url: "/assets/models/generated/dino.glb", scale: 1.2 },
+// --- BASE MODEL DEFINITIONS ---
+const MODELS = {
+  humanoid: "/assets/models/external/humanoid.glb",
+  settler: "/assets/models/external/settler.glb",
+  soldier: "/assets/models/external/soldier.glb",
+  pilot: "/assets/models/external/pilot.glb",
+  animal: "/assets/models/external/animal.glb",
+  fish: "/assets/models/external/fish.glb",
+  dragon: "/assets/models/external/dragon.glb",
+  buggy: "/assets/models/external/buggy.glb",
+  cone: "PRIMITIVE_CONE",
+  box: "PRIMITIVE_BOX",
+  sphere: "PRIMITIVE_SPHERE"
 };
 
+const BASE_ASSETS: AssetSet = {
+  settler: { url: MODELS.settler, scale: 1.0, targetHeight: 1.8, heightRange: [1.5, 2.0] },
+  tribe: { url: MODELS.soldier, scale: 1.0, targetHeight: 1.85, heightRange: [1.6, 2.1] },
+  pilot: { url: MODELS.pilot, scale: 1.0, targetHeight: 1.8, heightRange: [1.6, 2.0] },
+  fae: { url: MODELS.humanoid, scale: 0.6, targetHeight: 1.2, heightRange: [0.8, 1.5], tint: "#ffb7b2" },
+  synth: { url: MODELS.humanoid, scale: 1.0, targetHeight: 2.0, heightRange: [1.8, 2.2] },
+  
+  fauna: { url: MODELS.animal, scale: 1.0, targetHeight: 0.6, heightRange: [0.4, 0.9] },
+  beast: { url: MODELS.animal, scale: 1.5, targetHeight: 1.2, heightRange: [0.9, 1.6], tint: "#a05050" },
+  
+  outsider: { url: MODELS.humanoid, scale: 1.2, targetHeight: 2.2, heightRange: [2.0, 2.5], tint: "#00ff00" },
+  voidborn: { url: MODELS.pilot, scale: 1.1, targetHeight: 2.0, heightRange: [1.8, 2.2], emissive: "#aa00ff" },
+
+  habitat: { url: MODELS.box, scale: 1.0, targetHeight: 4.0, heightRange: [3.0, 6.0], tint: "#c2b3a3" },
+  obelisk: { url: MODELS.cone, scale: 1.0, targetHeight: 8.0, heightRange: [6.0, 12.0], emissive: "#c6a8ff" },
+  station: { url: MODELS.box, scale: 1.0, targetHeight: 6.0, heightRange: [4.0, 10.0], metalness: 0.8 },
+  grove: { url: MODELS.cone, scale: 1.0, targetHeight: 5.0, heightRange: [3.0, 8.0], tint: "#2d5a27" },
+  cycad: { url: MODELS.cone, scale: 1.0, targetHeight: 3.0, heightRange: [2.0, 5.0], tint: "#6b8f4f" },
+};
+
+// --- WORLD SPECIFIC SETS ---
 export const ASSET_SETS: Record<string, AssetSet> = {
-  living: {
-    ...BASE_ASSETS,
-    settler: { ...BASE_ASSETS.settler, tint: "#d8c2a5" },
-    fauna: { ...BASE_ASSETS.fauna, tint: "#5e8b5a" },
-    outsider: { ...BASE_ASSETS.outsider, tint: "#6ad4c5", emissive: "#6ad4c5" },
-    habitat: { ...BASE_ASSETS.habitat, tint: "#c2b3a3" },
-    grove: { ...BASE_ASSETS.grove, tint: "#4c7f56" },
-  },
+  // 1. Living World (Standard)
+  living: { ...BASE_ASSETS },
+
+  // 2. Fantasy (Magic, Dragons)
   fantasy: {
     ...BASE_ASSETS,
-    fae: { ...BASE_ASSETS.fae, tint: "#c9a6ff", emissive: "#c9a6ff" },
-    beast: { ...BASE_ASSETS.beast, tint: "#9ed37a" },
-    obelisk: { ...BASE_ASSETS.obelisk, tint: "#c6a8ff", emissive: "#c6a8ff", metalness: 0.3 },
-    wyrm: { ...BASE_ASSETS.wyrm, tint: "#a67cff", emissive: "#7b5aff" },
-    grove: { ...BASE_ASSETS.grove, tint: "#3d6f50" },
+    fae: { ...BASE_ASSETS.fae, emissive: "#c9a6ff" },
+    wyrm: { url: MODELS.dragon, scale: 2.0, targetHeight: 2.5, heightRange: [2.0, 4.0], tint: "#a67cff" },
+    beast: { url: MODELS.animal, scale: 1.5, targetHeight: 1.2, heightRange: [1.0, 1.8], tint: "#553311" }
   },
+
+  // 3. Dino (Prehistoric)
   dino: {
     ...BASE_ASSETS,
     tribe: { ...BASE_ASSETS.tribe, tint: "#c49a6c" },
-    saurian: { ...BASE_ASSETS.saurian, tint: "#6f9c62" },
-    raptor: { ...BASE_ASSETS.raptor, tint: "#9bbd5a" },
-    cycad: { ...BASE_ASSETS.cycad, tint: "#6b8f4f" },
+    saurian: { url: MODELS.dragon, scale: 1.8, targetHeight: 3.0, heightRange: [2.5, 3.5], tint: "#6f9c62" }, // Dragon as T-Rex
+    raptor: { url: MODELS.animal, scale: 1.2, targetHeight: 1.5, heightRange: [1.2, 1.8], tint: "#9bbd5a" }, // Animal as Raptor
+    cycad: { url: MODELS.cone, scale: 1.2, targetHeight: 4.0, heightRange: [3.0, 6.0], tint: "#4a7a4a" }
   },
+
+  // 4. Space (Sci-Fi)
   space: {
     ...BASE_ASSETS,
     pilot: { ...BASE_ASSETS.pilot, tint: "#bcd7ff" },
-    synth: { ...BASE_ASSETS.synth, tint: "#7fd0ff", emissive: "#2aa5ff", metalness: 0.8 },
-    station: { ...BASE_ASSETS.station, tint: "#cfd7e6", metalness: 0.5, roughness: 0.35 },
-    outsider: { ...BASE_ASSETS.voidborn, tint: "#7affd6", emissive: "#7affd6" },
+    synth: { ...BASE_ASSETS.synth, emissive: "#2aa5ff" },
+    outsider: { ...BASE_ASSETS.voidborn, tint: "#7affd6", emissive: "#7affd6" }
   },
+
+  // 5. Oceanic (Underwater)
+  oceanic: {
+    ...BASE_ASSETS,
+    settler: { url: MODELS.pilot, scale: 1.0, targetHeight: 1.8, heightRange: [1.6, 2.0], tint: "#4f9bb8" }, // Diver
+    fauna: { url: MODELS.fish, scale: 1.0, targetHeight: 0.5, heightRange: [0.3, 0.8], rotateY: Math.PI/2 }, // Fish
+    beast: { url: MODELS.fish, scale: 3.0, targetHeight: 1.5, heightRange: [1.0, 2.5], tint: "#557f6a" }, // Whale/Shark
+    grove: { url: MODELS.cone, scale: 1.0, targetHeight: 2.0, heightRange: [1.0, 3.0], tint: "#3f9a88" } // Coral/Kelp
+  },
+
+  // 6. Frostbound (Ice)
+  frostbound: {
+    ...BASE_ASSETS,
+    settler: { url: MODELS.settler, scale: 1.0, targetHeight: 1.8, heightRange: [1.6, 2.0], tint: "#7db2d6" },
+    beast: { url: MODELS.animal, scale: 1.6, targetHeight: 1.4, heightRange: [1.2, 2.0], tint: "#e9f4ff" }, // Polar Bear/Wolf
+    grove: { url: MODELS.cone, scale: 1.0, targetHeight: 4.0, heightRange: [2.0, 6.0], tint: "#b7c7d8" } // Pine covered in snow
+  },
+
+  // 7. Emberfall (Volcanic)
+  emberfall: {
+    ...BASE_ASSETS,
+    settler: { url: MODELS.soldier, scale: 1.0, targetHeight: 1.8, heightRange: [1.6, 2.0], tint: "#7a2d1f" },
+    beast: { url: MODELS.dragon, scale: 1.5, targetHeight: 2.0, heightRange: [1.5, 2.5], tint: "#b0583a", emissive: "#ff8c4a" }, // Fire Drake
+    grove: { url: MODELS.cone, scale: 1.0, targetHeight: 3.0, heightRange: [2.0, 5.0], tint: "#3a2620", emissive: "#7a4a32" } // Burnt trees
+  },
+
+  // 8. Skyborne (Floating Islands)
+  skyborne: {
+    ...BASE_ASSETS,
+    settler: { url: MODELS.pilot, scale: 1.0, targetHeight: 1.8, heightRange: [1.6, 2.0], tint: "#d7efff" },
+    beast: { url: MODELS.animal, scale: 1.0, targetHeight: 0.8, heightRange: [0.5, 1.2], tint: "#ffffff", emissive: "#cde6f5" }, // Birds/Spirits
+    grove: { url: MODELS.cone, scale: 1.0, targetHeight: 6.0, heightRange: [4.0, 8.0], tint: "#87bfae" }
+  },
+
+  // 9. Ironwild (Rust/Mecha)
+  ironwild: {
+    ...BASE_ASSETS,
+    settler: { url: MODELS.soldier, scale: 1.0, targetHeight: 1.9, heightRange: [1.7, 2.1], tint: "#5a4a3a" },
+    machine: { url: MODELS.buggy, scale: 1.5, targetHeight: 1.5, heightRange: [1.2, 2.0], tint: "#a07a5a" }, // Rovers
+    beast: { url: MODELS.humanoid, scale: 1.2, targetHeight: 1.6, heightRange: [1.4, 2.0], tint: "#7a5a4a", metalness: 0.8 }, // Mecha-beasts
+    grove: { url: MODELS.box, scale: 1.0, targetHeight: 4.0, heightRange: [2.0, 6.0], tint: "#3a2c28", metalness: 0.9 } // Metal scraps
+  }
 };
 
 export const ASSET_KIND_FALLBACK: Record<string, keyof AssetSet> = {
